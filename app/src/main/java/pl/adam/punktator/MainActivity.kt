@@ -73,141 +73,123 @@ fun PunktatorApp() {
 
             when (screen) {
 
-                // =========================
-                // EKRAN STARTOWY
-                // =========================
+                "setup" -> {
 
-                "setup" -> SetupScreen(
+                    SetupScreen(
+                        players = players,
 
-                    players = players,
+                        onAdd = {
+                            players = players + Player(
+                                id = nextId,
+                                name = "Gracz $nextId"
+                            )
+                            nextId++
+                        },
 
-                    onAdd = {
-                        players = players + Player(
-                            nextId,
-                            "Gracz $nextId"
-                        )
-
-                        nextId++
-                    },
-
-                    onNameChange = { id, name ->
-
-                        players = players.map {
-
-                            if (it.id == id) {
-                                it.copy(name = name)
-                            } else {
-                                it
+                        onNameChange = { id, name ->
+                            players = players.map { player ->
+                                if (player.id == id) {
+                                    player.copy(name = name)
+                                } else {
+                                    player
+                                }
                             }
-                        }
-                    },
+                        },
 
-                    onRemove = { id ->
-
-                        players = players.filterNot {
-                            it.id == id
-                        }
-                    },
-
-                    onStart = {
-
-                        history = emptyList()
-                        screen = "game"
-                    }
-                )
-
-                // =========================
-                // EKRAN GRY
-                // =========================
-
-                "game" -> GameScreen(
-
-                    players = players,
-
-                    canUndo = history.isNotEmpty(),
-
-                    onAddPoints = { id, amount ->
-
-                        players = players.map {
-
-                            if (it.id == id) {
-                                it.copy(
-                                    score = it.score + amount
-                                )
-                            } else {
-                                it
+                        onRemove = { id ->
+                            players = players.filterNot {
+                                it.id == id
                             }
+                        },
+
+                        onStart = {
+                            history = emptyList()
+                            screen = "game"
                         }
+                    )
+                }
 
-                        history = history + Change(
-                            playerId = id,
-                            amount = amount
-                        )
-                    },
+                "game" -> {
 
-                    onUndo = {
+                    GameScreen(
+                        players = players,
+                        canUndo = history.isNotEmpty(),
 
-                        history.lastOrNull()?.let { last ->
+                        onAddPoints = { id, amount ->
 
-                            players = players.map {
+                            players = players.map { player ->
 
-                                if (it.id == last.playerId) {
-                                    it.copy(
-                                        score = it.score - last.amount
+                                if (player.id == id) {
+                                    player.copy(
+                                        score = player.score + amount
                                     )
                                 } else {
-                                    it
+                                    player
                                 }
                             }
 
-                            history = history.dropLast(1)
+                            history = history + Change(
+                                playerId = id,
+                                amount = amount
+                            )
+                        },
+
+                        onUndo = {
+
+                            val last = history.lastOrNull()
+
+                            if (last != null) {
+
+                                players = players.map { player ->
+
+                                    if (player.id == last.playerId) {
+                                        player.copy(
+                                            score = player.score - last.amount
+                                        )
+                                    } else {
+                                        player
+                                    }
+                                }
+
+                                history = history.dropLast(1)
+                            }
+                        },
+
+                        onCustom = { playerId ->
+                            customDialog = playerId
+                        },
+
+                        onFinish = {
+                            screen = "results"
                         }
-                    },
+                    )
+                }
 
-                    onCustom = {
-                        customDialog = it
-                    },
+                "results" -> {
 
-                    onFinish = {
+                    ResultsScreen(
+                        players = players,
 
-                        // Przejście do ekranu wyników
-                        screen = "results"
-                    }
-                )
+                        onNewGame = {
 
-                // =========================
-                // EKRAN WYNIKÓW
-                // =========================
+                            players = players.map { player ->
+                                player.copy(score = 0.0)
+                            }
 
-                "results" -> ResultsScreen(
+                            history = emptyList()
+                            screen = "game"
+                        },
 
-                    players = players,
+                        onSetup = {
 
-                    onNewGame = {
-
-                        players = players.map {
-                            it.copy(score = 0.0)
+                            players = emptyList()
+                            history = emptyList()
+                            nextId = 1
+                            screen = "setup"
                         }
-
-                        history = emptyList()
-
-                        screen = "game"
-                    },
-
-                    onSetup = {
-
-                        players = emptyList()
-                        history = emptyList()
-                        nextId = 1
-
-                        screen = "setup"
-                    }
-                )
+                    )
+                }
             }
-
-            // =========================
-            // DIALOG WŁASNYCH PUNKTÓW
-            // =========================
 
             customDialog?.let { playerId ->
 
@@ -219,14 +201,14 @@ fun PunktatorApp() {
 
                     onConfirm = { amount ->
 
-                        players = players.map {
+                        players = players.map { player ->
 
-                            if (it.id == playerId) {
-                                it.copy(
-                                    score = it.score + amount
+                            if (player.id == playerId) {
+                                player.copy(
+                                    score = player.score + amount
                                 )
                             } else {
-                                it
+                                player
                             }
                         }
 
@@ -242,10 +224,6 @@ fun PunktatorApp() {
         }
     }
 }
-
-// ======================================================
-// EKRAN KONFIGURACJI GRACZY
-// ======================================================
 
 @Composable
 fun SetupScreen(
@@ -287,18 +265,17 @@ fun SetupScreen(
         ) {
 
             itemsIndexed(
-                players,
+                items = players,
                 key = { _, player -> player.id }
             ) { _, player ->
 
                 OutlinedTextField(
-
                     value = player.name,
 
-                    onValueChange = {
+                    onValueChange = { name ->
                         onNameChange(
                             player.id,
-                            it
+                            name
                         )
                     },
 
@@ -319,24 +296,25 @@ fun SetupScreen(
                         ) {
 
                             Icon(
-                                Icons.Default.Delete,
+                                imageVector = Icons.Default.Delete,
                                 contentDescription = "Usuń"
                             )
                         }
                     }
-                }
+                )
             }
         }
 
         OutlinedButton(
             onClick = onAdd,
+
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp)
         ) {
 
             Icon(
-                Icons.Default.Add,
+                imageVector = Icons.Default.Add,
                 contentDescription = null
             )
 
@@ -345,7 +323,7 @@ fun SetupScreen(
             )
 
             Text(
-                "DODAJ GRACZA",
+                text = "DODAJ GRACZA",
                 fontSize = 16.sp
             )
         }
@@ -368,17 +346,13 @@ fun SetupScreen(
         ) {
 
             Text(
-                "START",
+                text = "START",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )
         }
     }
 }
-
-// ======================================================
-// EKRAN GRY
-// ======================================================
 
 @Composable
 fun GameScreen(
@@ -400,16 +374,14 @@ fun GameScreen(
             )
     ) {
 
-        // =========================
-        // NAGŁÓWEK
-        // =========================
-
         Row(
             modifier = Modifier.fillMaxWidth(),
 
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement =
+                Arrangement.SpaceBetween,
 
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment =
+                Alignment.CenterVertically
         ) {
 
             Text(
@@ -418,11 +390,8 @@ fun GameScreen(
                 fontWeight = FontWeight.Bold
             )
 
-            // Większy obszar klikalny przycisku
             OutlinedButton(
-                onClick = {
-                    onFinish()
-                },
+                onClick = onFinish,
 
                 modifier = Modifier.height(48.dp)
             ) {
@@ -439,18 +408,15 @@ fun GameScreen(
             modifier = Modifier.height(8.dp)
         )
 
-        // =========================
-        // LISTA GRACZY
-        // =========================
-
         LazyColumn(
             modifier = Modifier.weight(1f),
 
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement =
+                Arrangement.spacedBy(10.dp)
         ) {
 
             itemsIndexed(
-                players,
+                items = players,
                 key = { _, player -> player.id }
             ) { _, player ->
 
@@ -477,23 +443,24 @@ fun GameScreen(
                             Text(
                                 text = player.name,
                                 fontSize = 21.sp,
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight =
+                                    FontWeight.SemiBold
                             )
 
                             Text(
-                                text = formatScore(player.score),
+                                text =
+                                    formatScore(player.score),
+
                                 fontSize = 26.sp,
-                                fontWeight = FontWeight.Bold
+
+                                fontWeight =
+                                    FontWeight.Bold
                             )
                         }
 
                         Spacer(
                             modifier = Modifier.height(10.dp)
                         )
-
-                        // =========================
-                        // DODAWANIE PUNKTÓW
-                        // =========================
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -535,10 +502,6 @@ fun GameScreen(
                             modifier = Modifier.height(6.dp)
                         )
 
-                        // =========================
-                        // ODEJMOWANIE / WŁASNE
-                        // =========================
-
                         Row(
                             modifier = Modifier.fillMaxWidth(),
 
@@ -561,7 +524,6 @@ fun GameScreen(
                             )
 
                             OutlinedButton(
-
                                 onClick = {
                                     onCustom(player.id)
                                 },
@@ -581,14 +543,8 @@ fun GameScreen(
             modifier = Modifier.height(8.dp)
         )
 
-        // =========================
-        // COFANIE
-        // =========================
-
         OutlinedButton(
-
             onClick = onUndo,
-
             enabled = canUndo,
 
             modifier = Modifier
@@ -597,7 +553,7 @@ fun GameScreen(
         ) {
 
             Icon(
-                Icons.Default.Undo,
+                imageVector = Icons.Default.Undo,
                 contentDescription = null
             )
 
@@ -606,16 +562,12 @@ fun GameScreen(
             )
 
             Text(
-                "COFNIJ OSTATNIE PUNKTY",
+                text = "COFNIJ OSTATNIE PUNKTY",
                 fontSize = 15.sp
             )
         }
     }
 }
-
-// ======================================================
-// PRZYCISK PUNKTÓW
-// ======================================================
 
 @Composable
 fun RowScope.PointButton(
@@ -626,7 +578,6 @@ fun RowScope.PointButton(
 ) {
 
     Button(
-
         onClick = {
             onAdd(id, amount)
         },
@@ -641,10 +592,6 @@ fun RowScope.PointButton(
         Text(label)
     }
 }
-
-// ======================================================
-// DIALOG WŁASNYCH PUNKTÓW
-// ======================================================
 
 @Composable
 fun CustomPointsDialog(
@@ -667,7 +614,6 @@ fun CustomPointsDialog(
         text = {
 
             OutlinedTextField(
-
                 value = text,
 
                 onValueChange = {
@@ -685,13 +631,15 @@ fun CustomPointsDialog(
         confirmButton = {
 
             TextButton(
-
                 onClick = {
 
-                    text
+                    val amount = text
                         .replace(',', '.')
                         .toDoubleOrNull()
-                        ?.let(onConfirm)
+
+                    if (amount != null) {
+                        onConfirm(amount)
+                    }
                 }
             ) {
 
@@ -711,10 +659,6 @@ fun CustomPointsDialog(
     )
 }
 
-// ======================================================
-// EKRAN WYNIKÓW
-// ======================================================
-
 @Composable
 fun ResultsScreen(
     players: List<Player>,
@@ -722,9 +666,10 @@ fun ResultsScreen(
     onSetup: () -> Unit
 ) {
 
-    val sorted = players.sortedByDescending {
-        it.score
-    }
+    val sortedPlayers =
+        players.sortedByDescending {
+            it.score
+        }
 
     Column(
         modifier = Modifier
@@ -758,24 +703,21 @@ fun ResultsScreen(
                 Arrangement.spacedBy(10.dp)
         ) {
 
-            itemsIndexed(sorted) { index, player ->
+            itemsIndexed(
+                items = sortedPlayers
+            ) { index, player ->
 
-                val place =
-
-                    if (
-                        index > 0 &&
-                        abs(
-                            player.score -
-                                    sorted[index - 1].score
-                        ) < 0.0001
-                    ) {
-
-                        index
-
-                    } else {
-
-                        index + 1
-                    }
+                val place = if (
+                    index > 0 &&
+                    abs(
+                        player.score -
+                                sortedPlayers[index - 1].score
+                    ) < 0.0001
+                ) {
+                    index
+                } else {
+                    index + 1
+                }
 
                 Card(
                     shape = RoundedCornerShape(16.dp),
@@ -796,7 +738,8 @@ fun ResultsScreen(
                     ) {
 
                         Text(
-                            text = "$place. ${player.name}",
+                            text =
+                                "$place. ${player.name}",
 
                             fontSize = 20.sp,
 
@@ -819,7 +762,6 @@ fun ResultsScreen(
         }
 
         Button(
-
             onClick = onNewGame,
 
             modifier = Modifier
@@ -835,7 +777,6 @@ fun ResultsScreen(
         )
 
         OutlinedButton(
-
             onClick = onSetup,
 
             modifier = Modifier
@@ -847,10 +788,6 @@ fun ResultsScreen(
         }
     }
 }
-
-// ======================================================
-// FORMATOWANIE PUNKTÓW
-// ======================================================
 
 fun formatScore(value: Double): String {
 
