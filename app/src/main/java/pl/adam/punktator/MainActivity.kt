@@ -15,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,10 +45,58 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/* =========================
+   KOLORY
+   ========================= */
+
+private val BackgroundColor = Color(0xFF0F0F0F)
+private val CardColor = Color(0xFF1A1A1A)
+private val CardColorLight = Color(0xFF222222)
+private val GoldColor = Color(0xFFD6B36A)
+private val GoldDarkColor = Color(0xFFB89450)
+private val TextPrimary = Color(0xFFF5F5F5)
+private val TextSecondary = Color(0xFFBDBDBD)
+private val BorderColor = Color(0xFF3A3A3A)
+private val NegativeColor = Color(0xFFE57373)
+
+private val PunktatorDarkColors = darkColorScheme(
+    primary = GoldColor,
+    onPrimary = Color(0xFF17120A),
+
+    primaryContainer = Color(0xFF4A3A1E),
+    onPrimaryContainer = Color(0xFFFFEBC1),
+
+    secondary = GoldColor,
+    onSecondary = Color(0xFF17120A),
+
+    secondaryContainer = Color(0xFF3B3120),
+    onSecondaryContainer = Color(0xFFFFEBC1),
+
+    background = BackgroundColor,
+    onBackground = TextPrimary,
+
+    surface = CardColor,
+    onSurface = TextPrimary,
+
+    surfaceVariant = CardColorLight,
+    onSurfaceVariant = TextSecondary,
+
+    outline = BorderColor,
+
+    error = NegativeColor,
+    onError = Color.Black
+)
+
+/* =========================
+   GŁÓWNA APLIKACJA
+   ========================= */
+
 @Composable
 fun PunktatorApp() {
 
-    var screen by remember { mutableStateOf("setup") }
+    var screen by remember {
+        mutableStateOf("setup")
+    }
 
     var players by remember {
         mutableStateOf(listOf<Player>())
@@ -65,10 +114,13 @@ fun PunktatorApp() {
         mutableStateOf<Int?>(null)
     }
 
-    MaterialTheme {
+    MaterialTheme(
+        colorScheme = PunktatorDarkColors
+    ) {
 
         Surface(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
+            color = BackgroundColor
         ) {
 
             when (screen) {
@@ -79,15 +131,19 @@ fun PunktatorApp() {
                         players = players,
 
                         onAdd = {
+
                             players = players + Player(
                                 id = nextId,
                                 name = "Gracz $nextId"
                             )
+
                             nextId++
                         },
 
                         onNameChange = { id, name ->
+
                             players = players.map { player ->
+
                                 if (player.id == id) {
                                     player.copy(name = name)
                                 } else {
@@ -97,12 +153,14 @@ fun PunktatorApp() {
                         },
 
                         onRemove = { id ->
+
                             players = players.filterNot {
                                 it.id == id
                             }
                         },
 
                         onStart = {
+
                             history = emptyList()
                             screen = "game"
                         }
@@ -120,9 +178,11 @@ fun PunktatorApp() {
                             players = players.map { player ->
 
                                 if (player.id == id) {
+
                                     player.copy(
                                         score = player.score + amount
                                     )
+
                                 } else {
                                     player
                                 }
@@ -143,9 +203,12 @@ fun PunktatorApp() {
                                 players = players.map { player ->
 
                                     if (player.id == last.playerId) {
+
                                         player.copy(
-                                            score = player.score - last.amount
+                                            score =
+                                                player.score - last.amount
                                         )
+
                                     } else {
                                         player
                                     }
@@ -156,10 +219,12 @@ fun PunktatorApp() {
                         },
 
                         onCustom = { playerId ->
+
                             customDialog = playerId
                         },
 
                         onFinish = {
+
                             screen = "results"
                         }
                     )
@@ -204,9 +269,12 @@ fun PunktatorApp() {
                         players = players.map { player ->
 
                             if (player.id == playerId) {
+
                                 player.copy(
-                                    score = player.score + amount
+                                    score =
+                                        player.score + amount
                                 )
+
                             } else {
                                 player
                             }
@@ -224,6 +292,10 @@ fun PunktatorApp() {
         }
     }
 }
+
+/* =========================
+   EKRAN NOWEJ GRY
+   ========================= */
 
 @Composable
 fun SetupScreen(
@@ -247,12 +319,15 @@ fun SetupScreen(
         Text(
             text = "Punktator",
             fontSize = 32.sp,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = TextPrimary
         )
 
         Text(
             text = "Nowa gra",
             fontSize = 20.sp,
+            color = TextSecondary,
+
             modifier = Modifier.padding(
                 top = 4.dp,
                 bottom = 18.dp
@@ -261,7 +336,9 @@ fun SetupScreen(
 
         LazyColumn(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+
+            verticalArrangement =
+                Arrangement.spacedBy(10.dp)
         ) {
 
             itemsIndexed(
@@ -273,6 +350,7 @@ fun SetupScreen(
                     value = player.name,
 
                     onValueChange = { name ->
+
                         onNameChange(
                             player.id,
                             name
@@ -287,6 +365,23 @@ fun SetupScreen(
                         Text("Nazwa gracza")
                     },
 
+                    colors = OutlinedTextFieldDefaults.colors(
+
+                        focusedBorderColor = GoldColor,
+                        unfocusedBorderColor = BorderColor,
+
+                        focusedLabelColor = GoldColor,
+                        unfocusedLabelColor = TextSecondary,
+
+                        cursorColor = GoldColor,
+
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary,
+
+                        focusedContainerColor = CardColor,
+                        unfocusedContainerColor = CardColor
+                    ),
+
                     trailingIcon = {
 
                         IconButton(
@@ -297,7 +392,8 @@ fun SetupScreen(
 
                             Icon(
                                 imageVector = Icons.Default.Delete,
-                                contentDescription = "Usuń"
+                                contentDescription = "Usuń",
+                                tint = TextSecondary
                             )
                         }
                     }
@@ -310,7 +406,11 @@ fun SetupScreen(
 
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp)
+                .height(52.dp),
+
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = GoldColor
+            )
         ) {
 
             Icon(
@@ -335,14 +435,22 @@ fun SetupScreen(
         Button(
             onClick = onStart,
 
-            enabled = players.isNotEmpty() &&
-                    players.all {
-                        it.name.isNotBlank()
-                    },
+            enabled =
+                players.isNotEmpty() &&
+                        players.all {
+                            it.name.isNotBlank()
+                        },
 
             modifier = Modifier
                 .fillMaxWidth()
-                .height(58.dp)
+                .height(58.dp),
+
+            colors = ButtonDefaults.buttonColors(
+                containerColor = GoldColor,
+                contentColor = Color(0xFF17120A),
+                disabledContainerColor = Color(0xFF3A3A3A),
+                disabledContentColor = Color(0xFF777777)
+            )
         ) {
 
             Text(
@@ -353,6 +461,10 @@ fun SetupScreen(
         }
     }
 }
+
+/* =========================
+   EKRAN GRY
+   ========================= */
 
 @Composable
 fun GameScreen(
@@ -387,13 +499,19 @@ fun GameScreen(
             Text(
                 text = "Gra",
                 fontSize = 28.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
             )
 
-            OutlinedButton(
+            Button(
                 onClick = onFinish,
 
-                modifier = Modifier.height(48.dp)
+                modifier = Modifier.height(48.dp),
+
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = GoldColor,
+                    contentColor = Color(0xFF17120A)
+                )
             ) {
 
                 Text(
@@ -423,6 +541,10 @@ fun GameScreen(
                 Card(
                     shape = RoundedCornerShape(16.dp),
 
+                    colors = CardDefaults.cardColors(
+                        containerColor = CardColor
+                    ),
+
                     modifier = Modifier.fillMaxWidth()
                 ) {
 
@@ -444,17 +566,22 @@ fun GameScreen(
                                 text = player.name,
                                 fontSize = 21.sp,
                                 fontWeight =
-                                    FontWeight.SemiBold
+                                    FontWeight.SemiBold,
+                                color = TextPrimary
                             )
 
                             Text(
                                 text =
-                                    formatScore(player.score),
+                                    formatScore(
+                                        player.score
+                                    ),
 
                                 fontSize = 26.sp,
 
                                 fontWeight =
-                                    FontWeight.Bold
+                                    FontWeight.Bold,
+
+                                color = GoldColor
                             )
                         }
 
@@ -513,14 +640,16 @@ fun GameScreen(
                                 label = "-0,5",
                                 amount = -0.5,
                                 id = player.id,
-                                onAdd = onAddPoints
+                                onAdd = onAddPoints,
+                                negative = true
                             )
 
                             PointButton(
                                 label = "-1",
                                 amount = -1.0,
                                 id = player.id,
-                                onAdd = onAddPoints
+                                onAdd = onAddPoints,
+                                negative = true
                             )
 
                             OutlinedButton(
@@ -528,7 +657,15 @@ fun GameScreen(
                                     onCustom(player.id)
                                 },
 
-                                modifier = Modifier.weight(1f)
+                                modifier =
+                                    Modifier.weight(1f),
+
+                                colors =
+                                    ButtonDefaults
+                                        .outlinedButtonColors(
+                                            contentColor =
+                                                GoldColor
+                                        )
                             ) {
 
                                 Text("Własna")
@@ -549,7 +686,12 @@ fun GameScreen(
 
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp)
+                .height(52.dp),
+
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = TextSecondary,
+                disabledContentColor = Color(0xFF555555)
+            )
         ) {
 
             Icon(
@@ -569,12 +711,17 @@ fun GameScreen(
     }
 }
 
+/* =========================
+   PRZYCISK PUNKTÓW
+   ========================= */
+
 @Composable
 fun RowScope.PointButton(
     label: String,
     amount: Double,
     id: Int,
-    onAdd: (Int, Double) -> Unit
+    onAdd: (Int, Double) -> Unit,
+    negative: Boolean = false
 ) {
 
     Button(
@@ -586,12 +733,36 @@ fun RowScope.PointButton(
 
         contentPadding = PaddingValues(
             horizontal = 4.dp
+        ),
+
+        colors = ButtonDefaults.buttonColors(
+
+            containerColor =
+                if (negative) {
+                    Color(0xFF352020)
+                } else {
+                    Color(0xFF3A301F)
+                },
+
+            contentColor =
+                if (negative) {
+                    Color(0xFFFF9E9E)
+                } else {
+                    GoldColor
+                }
         )
     ) {
 
-        Text(label)
+        Text(
+            text = label,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
+
+/* =========================
+   DIALOG WŁASNYCH PUNKTÓW
+   ========================= */
 
 @Composable
 fun CustomPointsDialog(
@@ -606,6 +777,12 @@ fun CustomPointsDialog(
     AlertDialog(
 
         onDismissRequest = onDismiss,
+
+        containerColor = CardColor,
+
+        titleContentColor = TextPrimary,
+
+        textContentColor = TextSecondary,
 
         title = {
             Text("Własna liczba punktów")
@@ -624,7 +801,24 @@ fun CustomPointsDialog(
 
                 label = {
                     Text("Np. 3,5 lub -2")
-                }
+                },
+
+                colors = OutlinedTextFieldDefaults.colors(
+
+                    focusedBorderColor = GoldColor,
+                    unfocusedBorderColor = BorderColor,
+
+                    focusedLabelColor = GoldColor,
+                    unfocusedLabelColor = TextSecondary,
+
+                    cursorColor = GoldColor,
+
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary,
+
+                    focusedContainerColor = BackgroundColor,
+                    unfocusedContainerColor = BackgroundColor
+                )
             )
         },
 
@@ -633,9 +827,10 @@ fun CustomPointsDialog(
             TextButton(
                 onClick = {
 
-                    val amount = text
-                        .replace(',', '.')
-                        .toDoubleOrNull()
+                    val amount =
+                        text
+                            .replace(',', '.')
+                            .toDoubleOrNull()
 
                     if (amount != null) {
                         onConfirm(amount)
@@ -643,7 +838,11 @@ fun CustomPointsDialog(
                 }
             ) {
 
-                Text("DODAJ")
+                Text(
+                    text = "DODAJ",
+                    color = GoldColor,
+                    fontWeight = FontWeight.Bold
+                )
             }
         },
 
@@ -653,11 +852,18 @@ fun CustomPointsDialog(
                 onClick = onDismiss
             ) {
 
-                Text("ANULUJ")
+                Text(
+                    text = "ANULUJ",
+                    color = TextSecondary
+                )
             }
         }
     )
 }
+
+/* =========================
+   EKRAN WYNIKÓW
+   ========================= */
 
 @Composable
 fun ResultsScreen(
@@ -684,12 +890,14 @@ fun ResultsScreen(
         Text(
             text = "Wyniki",
             fontSize = 32.sp,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = TextPrimary
         )
 
         Text(
             text = "Ranking końcowy",
             fontSize = 18.sp,
+            color = TextSecondary,
 
             modifier = Modifier.padding(
                 bottom = 18.dp
@@ -714,13 +922,20 @@ fun ResultsScreen(
                                 sortedPlayers[index - 1].score
                     ) < 0.0001
                 ) {
+
                     index
+
                 } else {
+
                     index + 1
                 }
 
                 Card(
                     shape = RoundedCornerShape(16.dp),
+
+                    colors = CardDefaults.cardColors(
+                        containerColor = CardColor
+                    ),
 
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -744,17 +959,23 @@ fun ResultsScreen(
                             fontSize = 20.sp,
 
                             fontWeight =
-                                FontWeight.SemiBold
+                                FontWeight.SemiBold,
+
+                            color = TextPrimary
                         )
 
                         Text(
                             text =
-                                formatScore(player.score),
+                                formatScore(
+                                    player.score
+                                ),
 
                             fontSize = 23.sp,
 
                             fontWeight =
-                                FontWeight.Bold
+                                FontWeight.Bold,
+
+                            color = GoldColor
                         )
                     }
                 }
@@ -766,10 +987,18 @@ fun ResultsScreen(
 
             modifier = Modifier
                 .fillMaxWidth()
-                .height(54.dp)
+                .height(54.dp),
+
+            colors = ButtonDefaults.buttonColors(
+                containerColor = GoldColor,
+                contentColor = Color(0xFF17120A)
+            )
         ) {
 
-            Text("NOWA GRA")
+            Text(
+                text = "NOWA GRA",
+                fontWeight = FontWeight.Bold
+            )
         }
 
         Spacer(
@@ -781,13 +1010,21 @@ fun ResultsScreen(
 
             modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp)
+                .height(50.dp),
+
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = GoldColor
+            )
         ) {
 
             Text("ZMIENIĆ GRACZY")
         }
     }
 }
+
+/* =========================
+   FORMATOWANIE PUNKTÓW
+   ========================= */
 
 fun formatScore(value: Double): String {
 
