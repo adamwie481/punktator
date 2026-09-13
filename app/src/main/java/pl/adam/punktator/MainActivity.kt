@@ -167,7 +167,7 @@ fun GameScreen(players: List<Player>, canUndo: Boolean, onAddPoints: (Int, Doubl
 }
 
 @Composable
-fun PointButton(label: String, amount: Double, id: Int, onAdd: (Int, Double) -> Unit) {
+fun RowScope.PointButton(label: String, amount: Double, id: Int, onAdd: (Int, Double) -> Unit) {
     Button(onClick = { onAdd(id, amount) }, modifier = Modifier.weight(1f), contentPadding = PaddingValues(horizontal = 4.dp)) { Text(label) }
 }
 
